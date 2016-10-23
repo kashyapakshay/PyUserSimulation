@@ -1,3 +1,3 @@
 # Union College User Simulation Framework
----
-User Simulation framework for Dialogue Systems development.
+
+Statistical User Simulation framework for developing Dialogue Systems.
