@@ -2,7 +2,17 @@
 
 Statistical User Simulation framework for developing and evaluating Dialogue Systems.
 
-1. The library has two models to build USer SImulations:
+Statistical User Simulation models are useful for building simulations of users for testing spoken
+and adaptive dialogue systems when it is too expensive to run experiments with real users.
+
+The basic principle of a User Simulation is that given a system action (such as generating an
+instruction, providing suggestions, etc. by the dialogue system) at time *t*, *u<sub>s,t</sub>*, it
+predicts the action the next action a real user would perform in response at time *t + 1*,
+*u<sub>a,t+1</sub>* (such as following the instruction, accepting or rejecting the suggestions, etc.)
+
+The models accept *(u<sub>s,t</sub>, u<sub>a,t+1</sub>)* pairs as training data to make predictions.
+
+The library has two models to build User Simulations:
 
 ```python
 # Bigram-based Model [1]
@@ -12,7 +22,7 @@ from models import BigramModel
 from models import ClusterModel
 ```
 
-2. How to use:
+**How to use:**
 
 ```python
 userSimulation = BigramModel()
