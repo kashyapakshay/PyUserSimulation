@@ -62,6 +62,14 @@ class UserSimulation:
             if userActionProbability > mostProbability:
                 mostProbableUserAction = userAction
                 mostProbability = userActionProbability
+            elif userActionProbability == mostProbability:
+                # Randomly either switch or stick with current mostProbableUserAction when there
+                # are equally likely actions
+                # Lower flip chance for exploration
+                flip = random.randint(1, 10)
+                flipChance = 5
+                if flip > flipChance:
+                    mostProbableUserAction = userAction
 
         return mostProbableUserAction
 

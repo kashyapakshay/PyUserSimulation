@@ -1,8 +1,7 @@
 from sklearn import cluster
 import numpy as np
-
-# INCOMPLETE IMPLEMENTATION
-# Basically is just a bi-gram model
+import math
+import random
 
 class UserSimulation:
     def __init__(self, userActions=[], systemActions=[]):
@@ -16,7 +15,8 @@ class UserSimulation:
             for userAction in userActions:
                 self._actionsMap[systemAction][userAction] = 0
 
-        self.kMeansCluster = cluster.KMeans(n_clusters=4)
+        self.kMeansCluster = cluster.KMeans(n_clusters=2)
+        self.clusterLabels = {}
 
     def addNewUserAction(self, newUserAction):
         if newUserAction not in self._userActionsList:
@@ -45,6 +45,7 @@ class UserSimulation:
         self.addNewUserAction(userAction)
         self.addNewSystemAction(systemAction)
         self.updateActionsMap(userAction, systemAction)
+        self.updateClusters()
 
     def getUserActionCount(self, userAction, systemAction):
         if systemAction in self._actionsMap:
@@ -59,7 +60,17 @@ class UserSimulation:
         return sum(self._actionsMap[systemAction].values())
 
     def getProbability(self, userAction, systemAction):
-        return float(self.getUserActionCount(userAction, systemAction)) / float(self.getAllUserActionsCount(systemAction))
+        cluster = self.clusterLabels[systemAction]
+
+        clusterUserAction = 0
+        clusterTotal = 0
+
+        for systemAction2 in self.clusterLabels.keys():
+            if self.clusterLabels[systemAction2] == cluster:
+                clusterUserAction += self.getUserActionCount(userAction, systemAction2)
+                clusterTotal += self.getAllUserActionsCount(systemAction2)
+
+        return float(clusterUserAction) / float(clusterTotal)
 
     def getPredictedUserAction(self, systemAction):
         mostProbableUserAction = self._userActionsList[0]
@@ -70,10 +81,18 @@ class UserSimulation:
             if userActionProbability > mostProbability:
                 mostProbableUserAction = userAction
                 mostProbability = userActionProbability
+            elif userActionProbability == mostProbability:
+                # Randomly either switch or stick with current mostProbableUserAction when there
+                # are equally likely actions
+                # Lower flip chance for exploration
+                flip = random.randint(1, 10)
+                flipChance = 5
+                if flip > flipChance:
+                    mostProbableUserAction = userAction
 
         return mostProbableUserAction
 
-    def getClusters(self):
+    def updateClusters(self):
         data = []
         for userAction in self.getUserActions():
             for systemAction in self.getSystemActions():
@@ -83,10 +102,17 @@ class UserSimulation:
         data = np.array(data)
 
         # data = np.array([[systemAction, userAction] for i in range(0, self.getUserActionCount(userAction, systemAction)) for userAction in self.getUserActions() for systemAction in self.getSystemActions()])
+        k = int(math.ceil(len(self.getSystemActions())/2.0))
+        self.kMeansCluster = cluster.KMeans(n_clusters=k)
 
         self.kMeansCluster.fit(data)
 
-        return self.kMeansCluster.labels_
+        for pair in data.tolist():
+            if pair[0] not in self.clusterLabels:
+                self.clusterLabels[self._systemActionsList[pair[0]]] = self.kMeansCluster.labels_[data.tolist().index(pair)]
+
+    def getClusters(self):
+        return self.clusterLabels
 
 if __name__ == '__main__':
     # Test
@@ -109,6 +135,28 @@ if __name__ == '__main__':
     print 'Recording \'back\' for \'back-inst\''
     userSimulation.recordAction('back', 'back-inst')
 
+    print 'Recording \'fwd\' for \'left-inst\''
+    userSimulation.recordAction('fwd', 'left-inst')
+    print 'Recording \'back\' for \'left-inst\''
+    userSimulation.recordAction('back', 'left-inst')
+    print 'Recording \'left\' for \'left-inst\''
+    userSimulation.recordAction('left', 'left-inst')
+    print 'Recording \'left\' for \'left-inst\''
+    userSimulation.recordAction('left', 'left-inst')
+    print 'Recording \'right\' for \'left-inst\''
+    userSimulation.recordAction('right', 'left-inst')
+
+    print 'Recording \'fwd\' for \'right-inst\''
+    userSimulation.recordAction('fwd', 'right-inst')
+    print 'Recording \'back\' for \'right-inst\''
+    userSimulation.recordAction('back', 'right-inst')
+    print 'Recording \'left\' for \'right-inst\''
+    userSimulation.recordAction('left', 'right-inst')
+    print 'Recording \'right\' for \'right-inst\''
+    userSimulation.recordAction('right', 'right-inst')
+    print 'Recording \'right\' for \'right-inst\''
+    userSimulation.recordAction('right', 'right-inst')
+
     print ''
 
     print 'User Actions List: ', userSimulation.getUserActions()
@@ -122,8 +170,8 @@ if __name__ == '__main__':
 
     print ''
 
-    print 'Predicted user action for \'fwd-inst\': ', userSimulation.getPredictedUserAction('fwd-inst')
-    print 'Predicted user action for \'back-inst\': ', userSimulation.getPredictedUserAction('back-inst')
+    for systemAction in userSimulation.getSystemActions():
+        print 'Predicted user action for \'%s\': %s' % (systemAction, userSimulation.getPredictedUserAction(systemAction))
 
     print ''
 
