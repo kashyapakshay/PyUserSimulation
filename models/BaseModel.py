@@ -2,14 +2,14 @@ import random
 
 class BaseModel:
     def __init__(self, userActions=[], systemActions=[]):
-        self._userActionsList = []
-        self._systemActionsList = []
+        self._userActionsList = userActions[:]
+        self._systemActionsList = systemActions[:]
 
         self._actionsMap = {}
 
-        for systemAction in systemActions:
+        for systemAction in self._systemActionsList:
             self._actionsMap[systemAction] = {}
-            for userAction in userActions:
+            for userAction in self._userActionsList:
                 self._actionsMap[systemAction][userAction] = 0
 
     def addNewUserAction(self, newUserAction):

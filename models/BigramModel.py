@@ -13,8 +13,5 @@ class BigramModel(BaseModel):
         else:
             return 0
 
-    def getAllUserActionsCount(self, systemAction):
-        return sum(self._actionsMap[systemAction].values())
-
     def getProbability(self, userAction, systemAction):
         return float(self.getUserActionCount(userAction, systemAction)) / float(self.getAllUserActionsCount(systemAction))
