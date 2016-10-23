@@ -21,7 +21,7 @@ The library has two models to build User Simulations:
 # Bigram-based Model [1]
 from models import BigramModel
 
-# Cluster-based Model [2]
+# k-Means Clustering-based Model [2]
 from models import ClusterModel
 ```
 
