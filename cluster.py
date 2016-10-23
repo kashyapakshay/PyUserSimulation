@@ -1,3 +1,9 @@
+from sklearn import cluster
+import numpy as np
+
+# INCOMPLETE IMPLEMENTATION
+# Basically is just a bi-gram model
+
 class UserSimulation:
     def __init__(self, userActions=[], systemActions=[]):
         self._userActionsList = []
@@ -9,6 +15,8 @@ class UserSimulation:
             self._actionsMap[systemAction] = {}
             for userAction in userActions:
                 self._actionsMap[systemAction][userAction] = 0
+
+        self.kMeansCluster = cluster.KMeans(n_clusters=4)
 
     def addNewUserAction(self, newUserAction):
         if newUserAction not in self._userActionsList:
@@ -65,6 +73,21 @@ class UserSimulation:
 
         return mostProbableUserAction
 
+    def getClusters(self):
+        data = []
+        for userAction in self.getUserActions():
+            for systemAction in self.getSystemActions():
+                for i in range(0, self.getUserActionCount(userAction, systemAction)):
+                    data.append([self._systemActionsList.index(systemAction), self._userActionsList.index(userAction)])
+
+        data = np.array(data)
+
+        # data = np.array([[systemAction, userAction] for i in range(0, self.getUserActionCount(userAction, systemAction)) for userAction in self.getUserActions() for systemAction in self.getSystemActions()])
+
+        self.kMeansCluster.fit(data)
+
+        return self.kMeansCluster.labels_
+
 if __name__ == '__main__':
     # Test
     print '--- Testing ---\n'
@@ -101,3 +124,7 @@ if __name__ == '__main__':
 
     print 'Predicted user action for \'fwd-inst\': ', userSimulation.getPredictedUserAction('fwd-inst')
     print 'Predicted user action for \'back-inst\': ', userSimulation.getPredictedUserAction('back-inst')
+
+    print ''
+
+    print 'Clusters: ', userSimulation.getClusters()
