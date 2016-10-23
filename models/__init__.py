@@ -1,7 +1,8 @@
-from sklearn import cluster
-import numpy as np
 import math
 import random
+
+import numpy as np
+from sklearn import cluster
 
 class UserSimulation:
     def __init__(self, userActions=[], systemActions=[]):
@@ -14,9 +15,6 @@ class UserSimulation:
             self._actionsMap[systemAction] = {}
             for userAction in userActions:
                 self._actionsMap[systemAction][userAction] = 0
-
-        self.kMeansCluster = cluster.KMeans(n_clusters=2)
-        self.clusterLabels = {}
 
     def addNewUserAction(self, newUserAction):
         if newUserAction not in self._userActionsList:
@@ -45,7 +43,6 @@ class UserSimulation:
         self.addNewUserAction(userAction)
         self.addNewSystemAction(systemAction)
         self.updateActionsMap(userAction, systemAction)
-        self.updateClusters()
 
     def getUserActionCount(self, userAction, systemAction):
         if systemAction in self._actionsMap:
@@ -58,19 +55,6 @@ class UserSimulation:
 
     def getAllUserActionsCount(self, systemAction):
         return sum(self._actionsMap[systemAction].values())
-
-    def getProbability(self, userAction, systemAction):
-        cluster = self.clusterLabels[systemAction]
-
-        clusterUserAction = 0
-        clusterTotal = 0
-
-        for systemAction2 in self.clusterLabels.keys():
-            if self.clusterLabels[systemAction2] == cluster:
-                clusterUserAction += self.getUserActionCount(userAction, systemAction2)
-                clusterTotal += self.getAllUserActionsCount(systemAction2)
-
-        return float(clusterUserAction) / float(clusterTotal)
 
     def getPredictedUserAction(self, systemAction):
         mostProbableUserAction = self._userActionsList[0]
@@ -91,6 +75,32 @@ class UserSimulation:
                     mostProbableUserAction = userAction
 
         return mostProbableUserAction
+
+class BigramModel(UserSimulation):
+    def __init__(self, userActions=[], systemActions=[]):
+        UserSimulation.__init__(self, userActions, systemActions)
+
+    def getUserActionCount(self, userAction, systemAction):
+        if systemAction in self._actionsMap:
+            if userAction in self._actionsMap[systemAction]:
+                return self._actionsMap[systemAction][userAction]
+            else:
+                return 0
+        else:
+            return 0
+
+    def getAllUserActionsCount(self, systemAction):
+        return sum(self._actionsMap[systemAction].values())
+
+    def getProbability(self, userAction, systemAction):
+        return float(self.getUserActionCount(userAction, systemAction)) / float(self.getAllUserActionsCount(systemAction))
+
+class ClusterModel(UserSimulation):
+    def __init__(self, userActions=[], systemActions=[]):
+        UserSimulation.__init__(self, userActions, systemActions)
+
+        self.kMeansCluster = cluster.KMeans(n_clusters=2)
+        self.clusterLabels = {}
 
     def updateClusters(self):
         data = []
@@ -114,65 +124,19 @@ class UserSimulation:
     def getClusters(self):
         return self.clusterLabels
 
-if __name__ == '__main__':
-    # Test
-    print '--- Testing ---\n'
-    userSimulation = UserSimulation()
+    def recordAction(self, userAction, systemAction):
+        UserSimulation.recordAction(self, userAction, systemAction)
+        self.updateClusters()
 
-    print 'Recording \'fwd\' for \'fwd-inst\''
-    userSimulation.recordAction('fwd', 'fwd-inst')
-    print 'Recording \'back\' for \'fwd-inst\''
-    userSimulation.recordAction('back', 'fwd-inst')
-    print 'Recording \'left\' for \'fwd-inst\''
-    userSimulation.recordAction('left', 'fwd-inst')
-    print 'Recording \'left\' for \'fwd-inst\''
-    userSimulation.recordAction('left', 'fwd-inst')
-    print 'Recording \'right\' for \'fwd-inst\''
-    userSimulation.recordAction('right', 'fwd-inst')
+    def getProbability(self, userAction, systemAction):
+        cluster = self.clusterLabels[systemAction]
 
-    print 'Recording \'fwd\' for \'back-inst\''
-    userSimulation.recordAction('fwd', 'back-inst')
-    print 'Recording \'back\' for \'back-inst\''
-    userSimulation.recordAction('back', 'back-inst')
+        clusterUserAction = 0
+        clusterTotal = 0
 
-    print 'Recording \'fwd\' for \'left-inst\''
-    userSimulation.recordAction('fwd', 'left-inst')
-    print 'Recording \'back\' for \'left-inst\''
-    userSimulation.recordAction('back', 'left-inst')
-    print 'Recording \'left\' for \'left-inst\''
-    userSimulation.recordAction('left', 'left-inst')
-    print 'Recording \'left\' for \'left-inst\''
-    userSimulation.recordAction('left', 'left-inst')
-    print 'Recording \'right\' for \'left-inst\''
-    userSimulation.recordAction('right', 'left-inst')
+        for systemAction2 in self.clusterLabels.keys():
+            if self.clusterLabels[systemAction2] == cluster:
+                clusterUserAction += self.getUserActionCount(userAction, systemAction2)
+                clusterTotal += self.getAllUserActionsCount(systemAction2)
 
-    print 'Recording \'fwd\' for \'right-inst\''
-    userSimulation.recordAction('fwd', 'right-inst')
-    print 'Recording \'back\' for \'right-inst\''
-    userSimulation.recordAction('back', 'right-inst')
-    print 'Recording \'left\' for \'right-inst\''
-    userSimulation.recordAction('left', 'right-inst')
-    print 'Recording \'right\' for \'right-inst\''
-    userSimulation.recordAction('right', 'right-inst')
-    print 'Recording \'right\' for \'right-inst\''
-    userSimulation.recordAction('right', 'right-inst')
-
-    print ''
-
-    print 'User Actions List: ', userSimulation.getUserActions()
-    print 'System Actions List: ', userSimulation.getSystemActions()
-
-    print ''
-
-    for systemAction in userSimulation.getSystemActions():
-        for userAction in userSimulation.getUserActions():
-            print 'Probability of \'%s\' for \'%s\': %f' % (userAction, systemAction, userSimulation.getProbability(userAction, systemAction))
-
-    print ''
-
-    for systemAction in userSimulation.getSystemActions():
-        print 'Predicted user action for \'%s\': %s' % (systemAction, userSimulation.getPredictedUserAction(systemAction))
-
-    print ''
-
-    print 'Clusters: ', userSimulation.getClusters()
+        return float(clusterUserAction) / float(clusterTotal)
