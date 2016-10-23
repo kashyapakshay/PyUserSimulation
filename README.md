@@ -1,9 +1,9 @@
-# Union College User Simulation Framework
+# Union College User Simulation Library
 
-Statistical User Simulation framework for developing and evaluating Dialogue Systems.
+A Python Statistical User Simulation library for developing and evaluating Dialogue Systems.
 
 Statistical User Simulation models are useful for building simulations of users for testing spoken
-and adaptive dialogue systems when it is too expensive to run experiments with real users.
+and adaptive dialogue systems when it is too expensive to run experiments with real humans.
 
 The basic principle of a User Simulation is that given a system action (such as generating an
 instruction, providing suggestions, etc. by the dialogue system) at time *t*, *u<sub>s,t</sub>*, it
