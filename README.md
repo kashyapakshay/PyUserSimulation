@@ -10,7 +10,10 @@ instruction, providing suggestions, etc. by the dialogue system) at time *t*, *u
 predicts the action the next action a real user would perform in response at time *t + 1*,
 *u<sub>a,t+1</sub>* (such as following the instruction, accepting or rejecting the suggestions, etc.)
 
-The models accept *(u<sub>s,t</sub>, u<sub>a,t+1</sub>)* pairs as training data to make predictions.
+The models assume Markov Property holds, i.e, the next user action depends only on the corresponding
+system action and not the past action/dialogue history.
+
+The models accept *(u<sub>s,t</sub>, u<sub>a,t+1</sub>)* pairs as training data.
 
 The library has two models to build User Simulations:
 
